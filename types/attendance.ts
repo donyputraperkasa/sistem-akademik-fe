@@ -1,8 +1,12 @@
-export interface Grade {
+export enum AttendanceStatus {
+    HADIR = "HADIR",
+    TIDAK_HADIR = "TIDAK_HADIR",
+}
+
+export interface Attendance {
     id: string;
-    subject: string;
-    value: number;
-    createdAt: string;
+    status: AttendanceStatus;
+    date: string;
     teacher: {
         id: string;
         mapel: string;

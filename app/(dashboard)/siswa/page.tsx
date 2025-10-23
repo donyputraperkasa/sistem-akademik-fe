@@ -1,128 +1,175 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
 import { api } from "@/lib/api";
 import Card from "@/components/Card";
+import { useAuth } from "@/hooks/useAuth";
+
+interface Grade {
+    id: string;
+    subject: string;
+    value: number;
+    teacher: {
+        user: { username: string };
+    };
+}
+
+interface Attendance {
+    id: string;
+    date: string;
+    status: "HADIR" | "TIDAK_HADIR";
+    teacher: { user: { username: string } };
+}
+
+interface Task {
+    id: string;
+    title: string;
+    description: string;
+    status: "PENDING" | "SUBMITTED" | "GRADED";
+    teacher: { user: { username: string } };
+    dueDate: string;
+}
 
 export default function SiswaDashboard() {
-  useAuth(["SISWA"]); // 🔒 proteksi halaman agar hanya siswa yang bisa masuk
+    useAuth(["SISWA"]);
 
-    const [grades, setGrades] = useState([]);
-    const [attendance, setAttendance] = useState([]);
-    const [tasks, setTasks] = useState([]);
+    const [grades, setGrades] = useState<Grade[]>([]);
+    const [attendance, setAttendance] = useState<Attendance[]>([]);
+    const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function fetchData() {
         try {
-            const [gradeRes, attRes, taskRes] = await Promise.all([
+            const [gradesRes, attendanceRes, tasksRes] = await Promise.all([
             api.get("/grades"),
             api.get("/attendance"),
             api.get("/tasks"),
             ]);
-            setGrades(gradeRes.data);
-            setAttendance(attRes.data);
-            setTasks(taskRes.data);
-        } catch (err) {
-            console.error("Gagal mengambil data:", err);
+            setGrades(gradesRes.data);
+            setAttendance(attendanceRes.data);
+            setTasks(tasksRes.data);
+        } catch (error) {
+            console.error("Gagal memuat data siswa:", error);
         } finally {
             setLoading(false);
         }
         }
+
         fetchData();
     }, []);
 
-    if (loading) {
+    if (loading)
         return (
         <div className="flex justify-center items-center min-h-screen">
-            <p className="text-blue-600 font-semibold animate-pulse">Memuat data...</p>
+            <p className="text-blue-600 font-semibold animate-pulse">Memuat data siswa...</p>
         </div>
         );
-    }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-8">
         <h1 className="text-2xl font-bold text-blue-700">Dashboard Siswa</h1>
-        <p className="text-gray-600">Selamat datang di Sistem Akademik SMP BOPKRI 1 Yogyakarta 🎓</p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Nilai */}
-            <Card>
-            <h2 className="font-semibold text-lg mb-2 text-blue-700">📘 Nilai Saya</h2>
-            <div className="space-y-2">
-                {grades.length > 0 ? (
-                grades.map((grade: any) => (
-                    <div
-                    key={grade.id}
-                    className="flex justify-between border-b border-gray-200 pb-1 text-sm"
-                    >
-                    <span>{grade.subject}</span>
-                    <span className="font-bold text-blue-600">{grade.value}</span>
-                    </div>
-                ))
-                ) : (
-                <p className="text-gray-500 text-sm">Belum ada data nilai</p>
-                )}
-            </div>
-            </Card>
+        {/* --- Nilai --- */}
+        <Card>
+            <h2 className="font-semibold text-lg mb-3 text-blue-700">📘 Nilai Saya</h2>
+            {grades.length > 0 ? (
+            <table className="w-full border-collapse text-sm">
+                <thead>
+                <tr className="bg-blue-50 text-left border-b">
+                    <th className="p-2">Mata Pelajaran</th>
+                    <th className="p-2">Nilai</th>
+                    <th className="p-2">Guru</th>
+                </tr>
+                </thead>
+                <tbody>
+                {grades.map((grade) => (
+                    <tr key={grade.id} className="border-b hover:bg-blue-50">
+                    <td className="p-2">{grade.subject}</td>
+                    <td className="p-2 font-semibold text-blue-600">{grade.value}</td>
+                    <td className="p-2">{grade.teacher.user.username}</td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+            ) : (
+            <p className="text-gray-500 text-sm">Belum ada nilai.</p>
+            )}
+        </Card>
 
-            {/* Kehadiran */}
-            <Card>
-            <h2 className="font-semibold text-lg mb-2 text-blue-700">🕓 Kehadiran</h2>
-            <div className="space-y-2">
-                {attendance.length > 0 ? (
-                attendance.map((att: any) => (
-                    <div key={att.id} className="flex justify-between text-sm border-b border-gray-200 pb-1">
-                    <span>{new Date(att.date).toLocaleDateString()}</span>
-                    <span
-                        className={`font-semibold ${
-                        att.status === "HADIR" ? "text-green-600" : "text-red-500"
+        {/* --- Kehadiran --- */}
+        <Card>
+            <h2 className="font-semibold text-lg mb-3 text-blue-700">🕒 Riwayat Kehadiran</h2>
+            {attendance.length > 0 ? (
+            <table className="w-full border-collapse text-sm">
+                <thead>
+                <tr className="bg-blue-50 text-left border-b">
+                    <th className="p-2">Tanggal</th>
+                    <th className="p-2">Status</th>
+                    <th className="p-2">Guru</th>
+                </tr>
+                </thead>
+                <tbody>
+                {attendance.map((a) => (
+                    <tr key={a.id} className="border-b hover:bg-blue-50">
+                    <td className="p-2">{new Date(a.date).toLocaleDateString()}</td>
+                    <td
+                        className={`p-2 font-semibold ${
+                        a.status === "HADIR" ? "text-green-600" : "text-red-500"
                         }`}
                     >
-                        {att.status}
-                    </span>
-                    </div>
-                ))
-                ) : (
-                <p className="text-gray-500 text-sm">Belum ada data kehadiran</p>
-                )}
-            </div>
-            </Card>
+                        {a.status}
+                    </td>
+                    <td className="p-2">{a.teacher.user.username}</td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+            ) : (
+            <p className="text-gray-500 text-sm">Belum ada data kehadiran.</p>
+            )}
+        </Card>
 
-            {/* Tugas */}
-            <Card>
-            <h2 className="font-semibold text-lg mb-2 text-blue-700">📝 Daftar Tugas</h2>
-            <div className="space-y-2">
-                {tasks.length > 0 ? (
-                tasks.map((task: any) => (
-                    <div
-                    key={task.id}
-                    className="border p-2 rounded-md hover:bg-blue-50 transition"
-                    >
-                    <p className="font-medium">{task.title}</p>
-                    <p className="text-xs text-gray-500">
-                        Deadline: {new Date(task.dueDate).toLocaleDateString()}
-                    </p>
-                    <p
-                        className={`text-xs font-semibold ${
+        {/* --- Tugas --- */}
+        <Card>
+            <h2 className="font-semibold text-lg mb-3 text-blue-700">📝 Daftar Tugas</h2>
+            {tasks.length > 0 ? (
+            <table className="w-full border-collapse text-sm">
+                <thead>
+                <tr className="bg-blue-50 text-left border-b">
+                    <th className="p-2">Judul</th>
+                    <th className="p-2">Deskripsi</th>
+                    <th className="p-2">Tenggat</th>
+                    <th className="p-2">Status</th>
+                </tr>
+                </thead>
+                <tbody>
+                {tasks.map((task) => (
+                    <tr key={task.id} className="border-b hover:bg-blue-50">
+                    <td className="p-2">{task.title}</td>
+                    <td className="p-2">{task.description}</td>
+                    <td className="p-2">
+                        {new Date(task.dueDate).toLocaleDateString()}
+                    </td>
+                    <td
+                        className={`p-2 font-semibold ${
                         task.status === "GRADED"
                             ? "text-green-600"
                             : task.status === "SUBMITTED"
-                            ? "text-yellow-600"
-                            : "text-gray-400"
+                            ? "text-blue-600"
+                            : "text-gray-500"
                         }`}
                     >
                         {task.status}
-                    </p>
-                    </div>
-                ))
-                ) : (
-                <p className="text-gray-500 text-sm">Belum ada tugas</p>
-                )}
-            </div>
-            </Card>
-        </div>
+                    </td>
+                    </tr>
+                ))}
+                </tbody>
+            </table>
+            ) : (
+            <p className="text-gray-500 text-sm">Belum ada tugas.</p>
+            )}
+        </Card>
         </div>
     );
 }
