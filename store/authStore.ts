@@ -1,29 +1,22 @@
-import { create } from 'zustand';
-import { jwtDecode } from 'jwt-decode';
-import { loginRequest } from '../lib/auth';
-import { User } from '../types/user';
+// store/authStore.ts
+import { create } from "zustand";
+import { jwtDecode } from "jwt-decode";
+
+interface User {
+    id: string;
+    username: string;
+    role: "GURU" | "SISWA" | "KEPALA_SEKOLAH";
+    token?: string;
+}
 
 interface AuthState {
     user: User | null;
-    token: string | null;
-    login: (username: string, password: string) => Promise<void>;
+    setUser: (user: User) => void;
     logout: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
     user: null,
-    token: null,
-
-    login: async (username, password) => {
-        const data = await loginRequest(username, password);
-        const token = data.access_token;
-        const decoded = jwtDecode<User>(token);
-        set({ user: decoded, token });
-        localStorage.setItem('token', token);
-    },
-
-    logout: () => {
-        set({ user: null, token: null });
-        localStorage.removeItem('token');
-    },
+    setUser: (user) => set({ user }),
+    logout: () => set({ user: null }),
 }));
