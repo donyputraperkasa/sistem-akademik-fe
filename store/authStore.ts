@@ -1,12 +1,14 @@
 import { create } from "zustand";
 import { jwtDecode } from "jwt-decode";
 
-interface User {
-    id: string;
+export type User = {
+    id: number;
     username: string;
+    name?: string;     // ✅ tambahkan
+    email?: string;    // ✅ tambahkan
     role: "GURU" | "SISWA" | "KEPALA_SEKOLAH";
     token?: string;
-}
+};
 
 interface AuthState {
     user: User | null;

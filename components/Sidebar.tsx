@@ -9,6 +9,8 @@ import {
     CalendarCheck,
     Users,
     Megaphone,
+    User,
+    Settings,
     LogOut,
 } from "lucide-react";
 
@@ -19,9 +21,10 @@ export default function Sidebar() {
 
     const handleLogout = () => {
         logout();
-        router.push("/login");
+        router.push("/");
     };
 
+    // --- Menu per Role ---
     const menuGuru = [
         { name: "Dashboard", href: "/guru", icon: Home },
         { name: "Nilai", href: "/guru/grades", icon: BookOpen },
@@ -41,14 +44,25 @@ export default function Sidebar() {
         { name: "Guru", href: "/kepala-sekolah/teachers", icon: Users },
         { name: "Siswa", href: "/kepala-sekolah/students", icon: Users },
         { name: "Pengumuman", href: "/kepala-sekolah/announcements", icon: Megaphone },
+        { name: "Absensi", href: "/kepala-sekolah/attendance", icon: CalendarCheck },
     ];
 
-    const menus =
+    // --- Menu global (muncul untuk semua role) ---
+    const menuGlobal = [
+        { name: "Profil", href: "/profile", icon: User },
+        { name: "Pengaturan", href: "/settings", icon: Settings },
+    ];
+
+    // Gabungkan menu sesuai role
+    const roleMenu =
         user?.role === "GURU"
         ? menuGuru
         : user?.role === "SISWA"
         ? menuSiswa
         : menuKepsek;
+
+    // Gabungkan dengan global
+    const menus = [...roleMenu, ...menuGlobal];
 
     return (
         <aside className="w-64 bg-blue-100 text-slate-800 flex flex-col h-screen shadow-md rounded-r-lg transition-all">
