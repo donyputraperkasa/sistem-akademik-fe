@@ -6,6 +6,7 @@ import { Announcement } from "@/types/announcement";
 import Modal from "@/components/Modal";
 import { apiFetch } from "@/lib/auth";
 import { useRouter } from "next/navigation";
+import { Megaphone } from "lucide-react";
 
 export default function AnnouncementsPage() {
     const user = useAuthStore((s) => s.user);
@@ -19,7 +20,7 @@ export default function AnnouncementsPage() {
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // --- Debug helper: expose current auth store to window for easy inspection in DevTools
-  useEffect(() => {
+    useEffect(() => {
     // log initial values when component mounts or token changes
     console.log("[debug] auth store:", useAuthStore.getState());
 
@@ -113,7 +114,7 @@ export default function AnnouncementsPage() {
     // ========================
     return (
         <div className="p-8 relative">
-        <h1 className="text-2xl font-semibold text-blue-800 mb-6">📢 Pengumuman Sekolah</h1>
+        <h1 className="text-2xl font-semibold text-blue-800 mb-6"> <Megaphone className="inline-block mr-2" /> Pengumuman Sekolah</h1>
 
         {/* FORM TAMBAH */}
         {isKepsek && (

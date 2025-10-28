@@ -1,8 +1,19 @@
-import { ReactNode } from "react";
+import React from "react";
+import clsx from "clsx";
 
-export default function Card({ children }: { children: ReactNode }) {
+interface CardProps {
+    children: React.ReactNode;
+    className?: string; // ✅ tambahkan ini
+}
+
+export default function Card({ children, className }: CardProps) {
     return (
-        <div className="bg-white shadow-md rounded-lg p-4 hover:shadow-lg transition-all">
+        <div
+        className={clsx(
+            "bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-all",
+            className // ✅ gabungkan dengan className tambahan
+        )}
+        >
         {children}
         </div>
     );
