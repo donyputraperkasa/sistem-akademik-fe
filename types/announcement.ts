@@ -1,7 +1,13 @@
-export interface Announcement {
+// types/announcement.ts
+
+export type Announcement = {
     id: string;
     title: string;
     content: string;
-    createdAt: string;
-    createdBy: string; // ID Kepala Sekolah
-}
+    createdAt: string; // ISO string dari database
+    createdBy?: string;
+    createdByUser?: {
+        username: string;
+        role: "KEPALA_SEKOLAH" | "GURU" | "SISWA";
+    };
+};

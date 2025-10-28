@@ -1,63 +1,76 @@
+// store/authStore.ts
 import { create } from "zustand";
-import { jwtDecode } from "jwt-decode";
+import { persist } from "zustand/middleware";
+import { User } from "@/types/user";
 
-export type User = {
-    id: number;
-    username: string;
-    name?: string;     // ✅ tambahkan
-    email?: string;    // ✅ tambahkan
-    role: "GURU" | "SISWA" | "KEPALA_SEKOLAH";
-    token?: string;
+type AuthState = {
+    user: User | null;
+    token: string | null;
+    initialized: boolean;
+    setUser: (user: User | null) => void;
+    setToken: (token: string | null) => void;
+    getUserFromToken: () => User | null;
+    logout: () => void;
 };
 
-interface AuthState {
-    user: User | null;
-    initialized: boolean; // 👈 tambahan
-    setUser: (user: User) => void;
-    logout: () => void;
-    getUserFromToken: () => void;
-}
+export const useAuthStore = create<AuthState>()(
+    persist(
+        (set, get) => ({
+        user: null,
+        token: null,
+        initialized: false,
 
-export const useAuthStore = create<AuthState>((set) => ({
-    user: null,
-    initialized: false, // 👈 awalnya false
+        setUser: (user) => set({ user }),
+        setToken: (token) => set({ token }),
 
-    setUser: (user) => {
-        if (user.token) localStorage.setItem("token", user.token);
-        localStorage.setItem("user", JSON.stringify(user));
-        set({ user, initialized: true });
-    },
+        getUserFromToken: () => {
+            const token = get().token;
+            if (!token) return null;
+            try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            return {
+                id: payload.id,
+                username: payload.username,
+                role: payload.role,
+            } as User;
+            } catch (err) {
+            console.error("Invalid token:", err);
+            return null;
+            }
+        },
 
-    logout: () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        set({ user: null, initialized: true });
-    },
+        logout: () => {
+          set({ user: null, token: null });
+          localStorage.removeItem("auth-storage");
+        },
+        }),
+        {
+        name: "auth-storage",
 
-    getUserFromToken: () => {
-        const token = localStorage.getItem("token");
-        if (!token) return set({ initialized: true }); // 👈 tandai sudah selesai
-
-        try {
-        const decoded: any = jwtDecode(token);
-        const storedUser = localStorage.getItem("user");
-        const user = storedUser ? JSON.parse(storedUser) : null;
-        set({
-            user: { ...user, id: decoded.sub, role: decoded.role, token },
-            initialized: true, // 👈 penting
-        });
-        } catch (err) {
-        console.error("Token tidak valid:", err);
-        localStorage.removeItem("token");
-        set({ user: null, initialized: true });
+        onRehydrateStorage: () => {
+            return (persistedState, error) => {
+            if (error) {
+                console.error("❌ Error rehydrating auth storage:", error);
+                return;
+            }
+            setTimeout(() => {
+                try {
+                const saved = JSON.parse(localStorage.getItem("auth-storage") || "{}")?.state || {};
+                useAuthStore.setState({
+                    initialized: true,
+                    user: saved.user || null,
+                    token: saved.token || null,
+                });
+                console.log("✅ Auth store rehydrated:", saved);
+                } catch (err) {
+                console.error("❌ Failed to finalize rehydrate:", err);
+                }
+            }, 0);
+            };
+        },
         }
-    },
-}));
+    )
+);
 
-export function getToken() {
-    if (typeof window === "undefined") return null;
-    const token = localStorage.getItem("token");
-    // Debug sementara:
-    if (!token) console.warn("⚠️ Token belum ada di localStorage");
-    return token;
-}
+// helper to get token outside react components
+export const getToken = () => useAuthStore.getState().token;

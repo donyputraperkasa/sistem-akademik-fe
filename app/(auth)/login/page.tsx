@@ -26,6 +26,7 @@ export default function LoginPage() {
             ...user,
             token: access_token,
         });
+        useAuthStore.getState().setToken(access_token);
 
         // ✅ Redirect berdasarkan role
         switch (user.role) {
