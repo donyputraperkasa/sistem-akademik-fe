@@ -1,7 +1,9 @@
 export type Role = 'KEPALA_SEKOLAH' | 'GURU' | 'SISWA';
 
-export interface User {
-    id: string;
+export type User = {
+    id: number;
     username: string;
-    role: Role;
-}
+    name?: string;
+    email?: string;
+    role: string;
+};
