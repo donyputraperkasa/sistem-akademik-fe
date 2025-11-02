@@ -6,20 +6,23 @@ export const api = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000",
     headers: {
         "Content-Type": "application/json",
-  },
+    },
 });
 
 // ✅ Tambahkan token JWT ke setiap request
 api.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
         const token = getToken();
+        console.log("🎟️ Token dikirim:", token); // 🔍 tambahkan ini untuk debug
         if (token) {
         config.headers = config.headers ?? {};
         config.headers.Authorization = `Bearer ${token}`;
+        } else {
+        console.warn("⚠️ Tidak ada token yang dikirim (user belum login?)");
         }
         return config;
     },
-  (error) => Promise.reject(error)
+    (error) => Promise.reject(error)
 );
 
 // ✅ Tangani response error global

@@ -23,15 +23,17 @@ export default function GuruDashboard() {
     });
     const [loading, setLoading] = useState(true);
     const [announcement, setAnnouncement] = useState<Announcement | null>(null);
+    const [announcementError, setAnnouncementError] = useState<string | null>(null);
 
     useEffect(() => {
         async function fetchData() {
         try {
             const [gradeRes, attRes, taskRes, studentRes] = await Promise.all([
             api.get("/grades"),
+            // Assuming the /attendance endpoint is accessible by GURU role
             api.get("/attendance"),
             api.get("/tasks"),
-            api.get("/students"),
+            api.get("/students/by-teacher"),
             ]);
 
             const grades = gradeRes.data;
@@ -63,10 +65,16 @@ export default function GuruDashboard() {
                 const annRes = await api.get("/announcements");
                 if (annRes.data.length > 0) {
                     setAnnouncement(annRes.data[0]);
+                    setAnnouncementError(null);
                 } else {
                     setAnnouncement(null);
                 }
-            } catch (err) {
+            } catch (err: any) {
+                if (err.response && (err.response.status === 403 || err.response.status === 404)) {
+                    setAnnouncementError("Pengumuman tidak tersedia atau akses ditolak.");
+                } else {
+                    setAnnouncementError("Gagal memuat pengumuman.");
+                }
                 console.error("Gagal memuat pengumuman:", err);
                 setAnnouncement(null);
             }
@@ -91,7 +99,7 @@ export default function GuruDashboard() {
     return (
         <div className="space-y-8">
         {announcement ? (
-            <div className="bg-blue-100 border border-blue-300 text-blue-900 p-4 rounded-lg shadow-sm transition-all">
+            <div className="bg-blue-50 border border-blue-300 text-blue-900 p-4 rounded-lg shadow-sm transition-all">
                 <div className="flex items-center gap-2">
                     <span className="text-lg">📢</span>
                     <p className="font-semibold">{announcement.title}</p>
@@ -101,8 +109,15 @@ export default function GuruDashboard() {
                     Diterbitkan: {new Date(announcement.createdAt).toLocaleDateString("id-ID")}
                 </p>
             </div>
+        ) : announcementError ? (
+            <div className="bg-yellow-50 border border-yellow-300 text-yellow-900 p-4 rounded-lg shadow-sm transition-all">
+                <div className="flex items-center gap-2">
+                    <span className="text-lg">⚠️</span>
+                    <p className="font-semibold">{announcementError}</p>
+                </div>
+            </div>
         ) : (
-            <div className="bg-blue-100 border border-blue-300 text-blue-900 p-4 rounded-lg shadow-sm transition-all">
+            <div className="bg-blue-50 border border-blue-300 text-blue-900 p-4 rounded-lg shadow-sm transition-all">
                 <div className="flex items-center gap-2">
                     <span className="text-lg">📢</span>
                     <p className="font-semibold">Belum ada pengumuman.</p>

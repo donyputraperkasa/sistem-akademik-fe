@@ -50,16 +50,22 @@ export default function SiswaDashboard() {
     useEffect(() => {
         async function fetchData() {
             try {
+                // Log mulai fetch
+                console.log("[SISWA] Memuat data...");
                 const [gradesRes, attendanceRes, tasksRes, annRes] = await Promise.all([
-                    api.get("/grades"),
-                    api.get("/attendance"),
-                    api.get("/tasks"),
+                    api.get("/grades/me"),
+                    api.get("/attendance/me"),
+                    api.get("/tasks/student"),
                     api.get("/announcements"),
                 ]);
+                console.log("[SISWA] Nilai:", gradesRes.data);
                 setGrades(gradesRes.data);
+                console.log("[SISWA] Kehadiran:", attendanceRes.data);
                 setAttendance(attendanceRes.data);
+                console.log("[SISWA] Tugas:", tasksRes.data);
                 setTasks(tasksRes.data);
                 if (annRes.data.length > 0) {
+                    console.log("[SISWA] Pengumuman terbaru:", annRes.data[0]);
                     setAnnouncement(annRes.data[0]);
                 } else {
                     setAnnouncement(null);
@@ -81,6 +87,7 @@ export default function SiswaDashboard() {
             </div>
         );
 
+        
     return (
         <div className="space-y-8">
             {announcement ? (
